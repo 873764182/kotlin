@@ -27,6 +27,7 @@ class RedundantVisibilityModifierInspection : AbstractKotlinInspection(), Cleanu
                 else ->
                     null
             }
+            // todo: check compiler cli args for -Xlibrary-mode
             if (redundantVisibility != null) {
                 holder.registerProblem(
                     visibilityModifier,
