@@ -10194,6 +10194,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
             runTest("compiler/testData/codegen/box/enum/enumInheritedFromTrait.kt");
         }
 
+        @TestMetadata("enumMultiModule.kt")
+        public void testEnumMultiModule() throws Exception {
+            runTest("compiler/testData/codegen/box/enum/enumMultiModule.kt");
+        }
+
         @TestMetadata("enumShort.kt")
         public void testEnumShort() throws Exception {
             runTest("compiler/testData/codegen/box/enum/enumShort.kt");

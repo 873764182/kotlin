@@ -18,6 +18,24 @@ open class DescriptorReferenceSerializer(
     val serializeString: (String) -> KotlinIr.String,
     mangler: KotlinMangler): KotlinMangler by mangler {
 
+    private fun isEnumSpecialMember(descriptor: DeclarationDescriptor): Boolean {
+        if (descriptor !is SimpleFunctionDescriptor) return false
+
+        if (descriptor.dispatchReceiverParameter != null) return false
+        if (descriptor.extensionReceiverParameter != null) return false
+        if (descriptor.typeParameters.isNotEmpty()) return false
+
+        val containingClass = descriptor.containingDeclaration as? ClassDescriptor ?: return false
+
+        if (containingClass.kind != ClassKind.ENUM_CLASS) return false
+
+        if (descriptor.name.asString() == "valueOf") return descriptor.valueParameters.size == 1
+
+        if (descriptor.name.asString() == "values") return descriptor.valueParameters.size == 0
+
+        return false
+    }
+
     // Not all exported descriptors are deserialized, some a synthesized anew during metadata deserialization.
     // Those created descriptors can't carry the uniqIdIndex, since it is available only for deserialized descriptors.
     // So we record the uniq id of some other "discoverable" descriptor for which we know for sure that it will be
@@ -54,7 +72,7 @@ open class DescriptorReferenceSerializer(
         val isDefaultConstructor =
             descriptor is ClassConstructorDescriptor && containingDeclaration is ClassDescriptor && containingDeclaration.kind == ClassKind.OBJECT
         val isEnumEntry = descriptor is ClassDescriptor && descriptor.kind == ClassKind.ENUM_ENTRY
-        val isEnumSpecial = declaration.origin == IrDeclarationOrigin.ENUM_CLASS_SPECIAL_MEMBER
+        val isEnumSpecial = isEnumSpecialMember(descriptor)
         val isTypeParameter = declaration is IrTypeParameter && declaration.parent is IrClass
 
 
