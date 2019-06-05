@@ -70,7 +70,7 @@ open class DescriptorReferenceSerializer(
         val isBackingField = declaration is IrField && declaration.correspondingProperty != null
         val isFakeOverride = declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE
         val isDefaultConstructor =
-            descriptor is ClassConstructorDescriptor && containingDeclaration is ClassDescriptor && containingDeclaration.kind == ClassKind.OBJECT
+            descriptor is ClassConstructorDescriptor && containingDeclaration is ClassDescriptor && (containingDeclaration.kind == ClassKind.OBJECT || containingDeclaration.kind == ClassKind.ENUM_ENTRY)
         val isEnumEntry = descriptor is ClassDescriptor && descriptor.kind == ClassKind.ENUM_ENTRY
         val isEnumSpecial = isEnumSpecialMember(descriptor)
         val isTypeParameter = declaration is IrTypeParameter && declaration.parent is IrClass

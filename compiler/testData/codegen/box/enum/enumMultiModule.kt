@@ -2,11 +2,15 @@
 // MODULE: lib
 // FILE: common.kt
 
-enum class FooEnum(val s: String) {
-    OK("OK"),
-    FAIL("FAIL");
+enum class FooEnum() {
+    OK {
+        override fun foo() = "OK"
+    },
+    FAIL {
+        override fun foo() = "FAIL"
+    };
 
-    fun foo() = s
+    abstract fun foo(): String
 }
 
 

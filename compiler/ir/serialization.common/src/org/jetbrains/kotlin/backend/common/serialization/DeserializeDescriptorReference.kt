@@ -5,10 +5,13 @@
 
 package org.jetbrains.kotlin.backend.common.serialization
 
+import org.jetbrains.kotlin.backend.common.descriptors.WrappedClassConstructorDescriptor
+import org.jetbrains.kotlin.backend.common.descriptors.WrappedSimpleFunctionDescriptor
 import org.jetbrains.kotlin.backend.common.serialization.UniqIdKey
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.backend.common.serialization.resolveFakeOverrideMaybeAbstract
+import org.jetbrains.kotlin.descriptors.impl.EnumEntrySyntheticClassDescriptor
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -136,6 +139,16 @@ abstract class DescriptorReferenceDeserializer(
             return clazz!!.declaredTypeParameters.first { it.name.asString() == name }
         }
 
+        if (clazz is EnumEntrySyntheticClassDescriptor) {
+            if (isDefaultConstructor) {
+                return object : WrappedClassConstructorDescriptor() {
+                    override fun getContainingDeclaration(): ClassDescriptor {
+                        return clazz
+                    }
+                }
+            }
+        }
+
         if (protoIndex?.let { checkIfSpecialDescriptorId(it) } == true) {
             return resolveSpecialDescriptor(packageFqName.child(Name.identifier(name)))
         }
@@ -155,7 +168,13 @@ abstract class DescriptorReferenceDeserializer(
                     }
                 }
             }
-        } ?:
-        error("Could not find serialized descriptor for index: ${index} ${packageFqName},${classFqName},${name}")
+        } ?: if (clazz is EnumEntrySyntheticClassDescriptor) {
+            return object : WrappedSimpleFunctionDescriptor() {
+                override fun getContainingDeclaration(): ClassDescriptor {
+                    return clazz
+                }
+            }
+        } else
+            error("Could not find serialized descriptor for indexx: ${index} ${packageFqName},${classFqName},${name}")
     }
 }
