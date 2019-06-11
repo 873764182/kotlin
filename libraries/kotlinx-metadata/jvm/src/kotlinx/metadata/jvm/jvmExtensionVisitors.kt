@@ -182,23 +182,6 @@ open class JvmPropertyExtensionVisitor @JvmOverloads constructor(
         setterSignature: JvmMethodSignature?
     ) {
         delegate?.visit(jvmFlags, fieldSignature, getterSignature, setterSignature)
-
-        @Suppress("DEPRECATION_ERROR")
-        visit(fieldSignature, getterSignature, setterSignature)
-    }
-
-    @Deprecated(
-        "Use visit(Flags, JvmFieldSignature?, JvmMethodSignature?, JvmMethodSignature?) instead.",
-        level = DeprecationLevel.ERROR,
-        replaceWith = ReplaceWith("visit(flagsOf(), fieldSignature, getterSignature, setterSignature)", "kotlinx.metadata.flagsOf")
-    )
-    open fun visit(
-        fieldSignature: JvmFieldSignature?,
-        getterSignature: JvmMethodSignature?,
-        setterSignature: JvmMethodSignature?
-    ) {
-        @Suppress("DEPRECATION_ERROR")
-        delegate?.visit(fieldSignature, getterSignature, setterSignature)
     }
 
     /**

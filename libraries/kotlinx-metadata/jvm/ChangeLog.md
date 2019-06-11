@@ -3,6 +3,7 @@
 ## 0.1.0
 
 - [`KT-26602`](https://youtrack.jetbrains.com/issue/KT-26602) Provide a value-based API
+- Remove deprecated JvmPropertyExtensionVisitor.visit
 
 ## 0.0.6
 
