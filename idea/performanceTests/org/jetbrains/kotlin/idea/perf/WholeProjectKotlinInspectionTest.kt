@@ -6,7 +6,9 @@
 package org.jetbrains.kotlin.idea.perf
 
 import com.intellij.codeInspection.ex.Tools
+import kotlin.test.Ignore
 
+@Ignore(value = "[VD] temporary for further inverstigation")
 class WholeProjectKotlinInspectionTest : WholeProjectInspectionTest(), WholeProjectKotlinFileProvider {
     override fun isEnabledInspection(tools: Tools) = tools.tool.language in setOf(null, "kotlin", "UAST")
 }

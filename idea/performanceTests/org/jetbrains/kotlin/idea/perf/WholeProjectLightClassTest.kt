@@ -15,7 +15,9 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtVisitorVoid
 import java.util.*
 import kotlin.system.measureNanoTime
+import kotlin.test.Ignore
 
+@Ignore(value = "[VD] temporary for further inverstigation")
 class WholeProjectLightClassTest : WholeProjectPerformanceTest(), WholeProjectKotlinFileProvider {
 
     override fun doTest(file: VirtualFile): PerFileTestResult {
