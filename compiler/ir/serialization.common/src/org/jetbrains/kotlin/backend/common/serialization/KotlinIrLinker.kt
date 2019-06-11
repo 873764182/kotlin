@@ -133,6 +133,8 @@ abstract class KotlinIrLinker(
                 symbolTable.referenceProperty(
                     descriptor as PropertyDescriptor? ?: WrappedPropertyDescriptor()
                 )
+            KotlinIr.IrSymbolKind.LOCAL_DELEGATED_PROPERTY_SYMBOL ->
+                IrLocalDelegatedPropertySymbolImpl(descriptor as? VariableDescriptorWithAccessors ?: WrappedVariableDescriptorWithAccessor())
             else -> TODO("Unexpected classifier symbol kind: ${proto.kind}")
         }
 
