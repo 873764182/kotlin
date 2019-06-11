@@ -79,7 +79,7 @@ abstract class AbstractKotlinProjectsPerformanceTest : UsefulTestCase() {
         val manager = PsiDocumentManager.getInstance(project)
         CommandProcessor.getInstance().executeCommand(project, {
             ApplicationManager.getApplication().runWriteAction {
-                tcSimplePerfTest("Changing doc $fileName $nameOfChange") {
+                tcSimplePerfTest(fileName, "Changing doc $nameOfChange") {
                     block(document)
 
                     manager.commitDocument(document)
@@ -100,7 +100,7 @@ abstract class AbstractKotlinProjectsPerformanceTest : UsefulTestCase() {
         var project: Project? = null
 
         val projectPath = "$path/$name"
-        tcSimplePerfTest("Project ${note}opening $name") {
+        tcSimplePerfTest("", "Project ${note}opening $name") {
             project = ProjectManager.getInstance().loadAndOpenProject(projectPath)
             ProjectManagerEx.getInstanceEx().openTestProject(project!!)
 
@@ -128,7 +128,7 @@ abstract class AbstractKotlinProjectsPerformanceTest : UsefulTestCase() {
         val file = openFileInEditor(project, name)
 
         var highlightFile: List<HighlightInfo> = emptyList()
-        tcSimplePerfTest("Highlighting file $note${file.name}") {
+        tcSimplePerfTest(file.name, "Highlighting file $note${file.name}") {
             highlightFile = highlightFile(file)
         }
         return highlightFile
@@ -150,7 +150,7 @@ abstract class AbstractKotlinProjectsPerformanceTest : UsefulTestCase() {
             configureByText(KotlinFileType.INSTANCE, before)
         }
 
-        tcSimplePerfTest("Auto completion $name") {
+        tcSimplePerfTest("", "Auto completion $name") {
             with(codeInsightTestFixture) {
                 completeBasic()
                 type(type)

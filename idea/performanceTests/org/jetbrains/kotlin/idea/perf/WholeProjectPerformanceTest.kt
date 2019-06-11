@@ -13,10 +13,38 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.idea.perf.WholeProjectPerformanceTest.Companion.nsToMs
-import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
+import java.io.*
 import kotlin.system.measureNanoTime
+
+class Stats: Closeable {
+    private val statsFile: File
+    private val statsOutput: BufferedWriter
+
+    init {
+        statsFile = File("build/stats.csv").absoluteFile
+        statsOutput = statsFile.bufferedWriter()
+
+        statsOutput.appendln("File, ProcessID, Time")
+    }
+
+    fun append(file: String, id: String, nanoTime: Long) {
+        statsOutput.appendln(buildString {
+            append(file)
+            append(", ")
+            append(id)
+            append(", ")
+            append(nanoTime.nsToMs)
+        })
+        statsOutput.flush()
+    }
+
+    override fun close() {
+        statsOutput.flush()
+        statsOutput.close()
+    }
+}
+
+val stats: Stats = Stats()
 
 inline fun tcSuite(name: String, block: () -> Unit) {
     println("##teamcity[testSuiteStarted name='$name']")
@@ -41,16 +69,20 @@ inline fun tcTest(name: String, block: () -> Pair<Long, List<Throwable>>) {
     println("##teamcity[testFinished name='$name' duration='$time']")
 }
 
-inline fun tcSimplePerfTest(name: String, block: () -> Unit) {
+inline fun tcSimplePerfTest(file: String, name: String, block: () -> Unit) {
     tcTest(name) {
         val errors = mutableListOf<Throwable>()
-        measureNanoTime {
+        val spentNs = measureNanoTime {
             try {
                 block()
             } catch (t: Throwable) {
                 errors += t
             }
-        }.nsToMs to errors
+        }
+        stats.append(file, name, spentNs)
+        val spentMs = spentNs.nsToMs
+        println("##teamcity[testMetadata key='$name' type='number' value='$spentMs']")
+        spentMs to errors
     }
 }
 
@@ -67,7 +99,6 @@ fun String.tcEscape(): String {
 abstract class WholeProjectPerformanceTest : DaemonAnalyzerTestCase(), WholeProjectFileProvider {
 
     private val rootProjectFile: File = File("../perfTestProject").absoluteFile
-    private val statsFile: File = File("build/stats.csv").absoluteFile
     private val tmp = rootProjectFile
 
     override fun setUpProject() {
@@ -89,20 +120,10 @@ abstract class WholeProjectPerformanceTest : DaemonAnalyzerTestCase(), WholeProj
         tcSuite(this::class.simpleName ?: "Unknown") {
             val totals = mutableMapOf<String, Long>()
 
-            val statsOutput = statsFile.bufferedWriter()
-
-            statsOutput.appendln("File, ProcessID, Time")
-
             fun appendInspectionResult(file: String, id: String, nanoTime: Long) {
                 totals.merge(id, nanoTime) { a, b -> a + b }
 
-                statsOutput.appendln(buildString {
-                    append(file)
-                    append(", ")
-                    append(id)
-                    append(", ")
-                    append(nanoTime.nsToMs)
-                })
+                stats.append(file, id, nanoTime)
             }
 
             tcSuite("TotalPerFile") {
@@ -119,10 +140,6 @@ abstract class WholeProjectPerformanceTest : DaemonAnalyzerTestCase(), WholeProj
                     }
                 }
             }
-
-            statsOutput.flush()
-            statsOutput.close()
-
 
             tcSuite("Total") {
                 totals.forEach { (k, v) ->
