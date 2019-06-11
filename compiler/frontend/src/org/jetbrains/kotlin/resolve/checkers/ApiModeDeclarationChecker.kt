@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.resolve.checkers
 
+import org.jetbrains.kotlin.config.AnalysisFlags
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.diagnostics.Errors
@@ -35,8 +36,6 @@ class ApiModeDeclarationChecker : DeclarationChecker {
      * 5. Companion objects of public API classes
      *
      * Do we need something like @PublicApiFile to disable (or invert) this inspection per-file?
-     *
-     * TODO: exclude test sources? or should users manually pass compiler flag to particular ones?
      */
     private fun excludeForDiagnostic(descriptor: DeclarationDescriptor): Boolean {
         /* 1. */ if ((descriptor as? ClassConstructorDescriptor)?.isPrimary == true) return true
@@ -51,8 +50,7 @@ class ApiModeDeclarationChecker : DeclarationChecker {
 
     companion object {
         fun isEnabled(settings: LanguageVersionSettings): Boolean {
-            // languageVersionSettings.getFlag()
-            return true // todo: add analysis flag
+            return settings.getFlag(AnalysisFlags.apiMode)
         }
     }
 }

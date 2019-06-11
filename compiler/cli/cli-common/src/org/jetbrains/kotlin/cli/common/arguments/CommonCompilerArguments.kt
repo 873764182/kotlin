@@ -292,6 +292,12 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
     )
     var useFir: Boolean by FreezableVar(false)
 
+    @Argument(
+        value = "-Xapi-mode",
+        description = "Enable api mode, force compiler to report warnings an all public API declarations without explicit visibility"
+    )
+    var apiMode: Boolean by FreezableVar(false)
+
     open fun configureAnalysisFlags(collector: MessageCollector): MutableMap<AnalysisFlag<*>, Any> {
         return HashMap<AnalysisFlag<*>, Any>().apply {
             put(AnalysisFlags.skipMetadataVersionCheck, skipMetadataVersionCheck)
@@ -301,6 +307,7 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
             put(AnalysisFlags.useExperimental, useExperimental?.toList().orEmpty())
             put(AnalysisFlags.explicitApiVersion, apiVersion != null)
             put(AnalysisFlags.allowResultReturnType, allowResultReturnType)
+            put(AnalysisFlags.apiMode, apiMode)
         }
     }
 
