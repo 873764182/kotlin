@@ -12,9 +12,57 @@ import com.intellij.openapi.application.ex.ApplicationEx
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import org.jetbrains.kotlin.idea.perf.WholeProjectPerformanceTest.Companion.nsToMs
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
+import kotlin.system.measureNanoTime
+
+inline fun tcSuite(name: String, block: () -> Unit) {
+    println("##teamcity[testSuiteStarted name='$name']")
+    block()
+    println("##teamcity[testSuiteFinished name='$name']")
+}
+
+inline fun tcTest(name: String, block: () -> Pair<Long, List<Throwable>>) {
+    println("##teamcity[testStarted name='$name' captureStandardOutput='true']")
+    val (time, errors) = block()
+    if (errors.isNotEmpty()) {
+        val detailsWriter = StringWriter()
+        val errorDetailsPrintWriter = PrintWriter(detailsWriter)
+        errors.forEach {
+            it.printStackTrace(errorDetailsPrintWriter)
+            errorDetailsPrintWriter.println()
+        }
+        errorDetailsPrintWriter.close()
+        val details = detailsWriter.toString()
+        println("##teamcity[testFailed name='$name' message='Exceptions reported' details='${details.tcEscape()}']")
+    }
+    println("##teamcity[testFinished name='$name' duration='$time']")
+}
+
+inline fun tcSimplePerfTest(name: String, block: () -> Unit) {
+    tcTest(name) {
+        val errors = mutableListOf<Throwable>()
+        measureNanoTime {
+            try {
+                block()
+            } catch (t: Throwable) {
+                errors += t
+            }
+        }.nsToMs to errors
+    }
+}
+
+fun String.tcEscape(): String {
+    return this
+        .replace("|", "||")
+        .replace("[", "|[")
+        .replace("]", "|]")
+        .replace("\r", "|r")
+        .replace("\n", "|n")
+        .replace("'", "|'")
+}
 
 abstract class WholeProjectPerformanceTest : DaemonAnalyzerTestCase(), WholeProjectFileProvider {
 
@@ -84,39 +132,6 @@ abstract class WholeProjectPerformanceTest : DaemonAnalyzerTestCase(), WholeProj
                 }
             }
         }
-    }
-
-    inline fun tcSuite(name: String, block: () -> Unit) {
-        println("##teamcity[testSuiteStarted name='$name']")
-        block()
-        println("##teamcity[testSuiteFinished name='$name']")
-    }
-
-    inline fun tcTest(name: String, block: () -> Pair<Long, List<Throwable>>) {
-        println("##teamcity[testStarted name='$name' captureStandardOutput='true']")
-        val (time, errors) = block()
-        if (errors.isNotEmpty()) {
-            val detailsWriter = StringWriter()
-            val errorDetailsPrintWriter = PrintWriter(detailsWriter)
-            errors.forEach {
-                it.printStackTrace(errorDetailsPrintWriter)
-                errorDetailsPrintWriter.println()
-            }
-            errorDetailsPrintWriter.close()
-            val details = detailsWriter.toString()
-            println("##teamcity[testFailed name='$name' message='Exceptions reported' details='${details.tcEscape()}']")
-        }
-        println("##teamcity[testFinished name='$name' duration='$time']")
-    }
-
-    fun String.tcEscape(): String {
-        return this
-            .replace("|", "||")
-            .replace("[", "|[")
-            .replace("]", "|]")
-            .replace("\r", "|r")
-            .replace("\n", "|n")
-            .replace("'", "|'")
     }
 
     protected fun PsiElement.acceptRecursively(visitor: PsiElementVisitor) {

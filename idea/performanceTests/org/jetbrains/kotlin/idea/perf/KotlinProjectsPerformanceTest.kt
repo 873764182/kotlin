@@ -8,47 +8,34 @@ package org.jetbrains.kotlin.idea.perf
 class KotlinProjectsPerformanceTest : AbstractKotlinProjectsPerformanceTest() {
 
     fun testHelloWorldProject() {
-        perfOpenProject("helloKotlin")
+        tcSuite("HelloWorld") {
+            perfOpenProject("helloKotlin")
 
-        // highlight
-        perfHighlightFile("src/HelloMain.kt")
-        perfHighlightFile("src/HelloMain2.kt")
+            // highlight
+            perfHighlightFile("src/HelloMain.kt")
+            perfHighlightFile("src/HelloMain2.kt")
 
-        // change document
-        perfChangeDocument("src/HelloMain2.kt", "type a single char") { doc ->
-            val text = doc.text
-            val offset = text.indexOf("println")
+            // change document
+            perfChangeDocument("src/HelloMain2.kt", "type a single char") { doc ->
+                val text = doc.text
+                val offset = text.indexOf("println")
 
-            doc.insertString(offset, "p\n")
-        }
+                doc.insertString(offset, "p\n")
+            }
 
-        perfChangeDocument("src/HelloMain.kt", "type val expression") { doc ->
-            val text = doc.text
-            val offset = text.indexOf("println")
+            perfChangeDocument("src/HelloMain.kt", "type val expression") { doc ->
+                val text = doc.text
+                val offset = text.indexOf("println")
 
-            doc.insertString(offset, "val s =\n")
+                doc.insertString(offset, "val s =\n")
+            }
         }
     }
 
     fun testAutoCompletion() {
-        perfAutoCompletion(
-            "println",
-            """
-            fun bar(){
-                printl<caret>
-            }
-            """,
-            "n",
-            """
-            fun bar(){
-                println
-            }
-            """
-        )
-
-        for (i in 2..5) {
+        tcSuite("AutoCompletion") {
             perfAutoCompletion(
-                "println$i",
+                "println",
                 """
             fun bar(){
                 printl<caret>
@@ -61,16 +48,34 @@ class KotlinProjectsPerformanceTest : AbstractKotlinProjectsPerformanceTest() {
             }
             """
             )
+
+            for (i in 2..5) {
+                perfAutoCompletion(
+                    "println$i",
+                    """
+            fun bar(){
+                printl<caret>
+            }
+            """,
+                    "n",
+                    """
+            fun bar(){
+                println
+            }
+            """
+                )
+            }
         }
     }
 
     fun testKotlinProject() {
-        perfOpenProject("perfTestProject", "..")
+        tcSuite("Kotlin") {
+            perfOpenProject("perfTestProject", "..")
 
-        perfHighlightFile("compiler/psi/src/org/jetbrains/kotlin/psi/KtFile.kt")
+            perfHighlightFile("compiler/psi/src/org/jetbrains/kotlin/psi/KtFile.kt")
 
-        perfHighlightFile("compiler/psi/src/org/jetbrains/kotlin/psi/KtElement.kt")
+            perfHighlightFile("compiler/psi/src/org/jetbrains/kotlin/psi/KtElement.kt")
+        }
     }
-
 
 }
